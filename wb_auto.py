@@ -369,6 +369,8 @@ def main():
         return 2
     if not webhook:
         log("缺少环境变量 FEISHU_WEBHOOK")
+    if os.environ.get("WB_ACCOUNT"):
+        log("=== 账号 %s ===" % os.environ["WB_ACCOUNT"])
 
     headers = {
         "Accept": "application/json",
