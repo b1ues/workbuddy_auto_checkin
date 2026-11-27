@@ -1,0 +1,27 @@
+name: probe-tokens
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: decode token identity
+        env:
+          WB1: ${{ secrets.WB_ACCESS_TOKEN }}
+          WB2: ${{ secrets.WB_ACCESS_TOKEN_2 }}
+        run: |
+          python3 - <<'EOF'
+          import os, base64, json
+          for name in ("WB1", "WB2"):
+              t = os.environ.get(name, "")
+              if not t:
+                  print(name, "EMPTY"); continue
+              try:
+                  p = t.split(".")[1]
+                  p += "=" * (-len(p) % 4)
+                  d = json.loads(base64.urlsafe_b64decode(p))
+                  print(name, "len=%d sub=%s user=%s sid=%s iat=%s" % (
+                      len(t), d.get("sub"), d.get("preferred_username"),
+                      d.get("session_state"), d.get("iat")))
+              except Exception as e:
+                  print(name, "decode_fail len=%d %s" % (len(t), type(e).__name__))
+          EOF
