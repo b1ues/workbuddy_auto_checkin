@@ -84,6 +84,14 @@ def request(url, headers, method="GET", payload=None, retry=True):
                     return resp.status, {"raw": raw[:300]}
         except urllib.error.HTTPError as e:
             raw = e.read().decode("utf-8", "replace")
+            # [临时诊断] 打印响应头与请求头（token 已脱敏），用于定位 runner 侧 401
+            try:
+                log("  · DEBUG code=%s resp_headers=%s req_headers=%s"
+                    % (e.code, dict(e.headers),
+                       {k: ("***" if k.lower() == "authorization" else v)
+                        for k, v in dict(req.header_items()).items()}))
+            except Exception:
+                pass
             try:
                 body = json.loads(raw)
             except ValueError:
@@ -378,6 +386,7 @@ def main():
     }
 
     log("=== 1/2 签到 ===")
+    log("  [临时诊断] token_len=%d endpoint=%s" % (len(token), endpoint))
     checkin_ok, checkin = run_checkin(headers, endpoint)
     log("  结论：%s" % checkin["report"])
 
